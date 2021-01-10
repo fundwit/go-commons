@@ -18,7 +18,11 @@ func (id *ID) UnmarshalJSON(data []byte) (err error) {
 }
 
 func (id *ID) MarshalJSON() ([]byte, error) {
-	return ([]byte)(`"` + strconv.FormatUint(uint64(*id), 10) + `"`), nil
+	return ([]byte)(`"` + id.String() + `"`), nil
+}
+
+func (id ID) String() string {
+	return strconv.FormatUint(uint64(id), 10)
 }
 
 func ParseID(idString string) (ID, error) {
