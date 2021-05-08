@@ -48,8 +48,14 @@ var _ = Describe("ID", func() {
 	})
 
 	Describe("String", func() {
-		It("should be convert to string", func() {
+		It("should be able to convert to string", func() {
 			Expect(types.ID(123).String()).To(Equal("123"))
+		})
+	})
+	Describe("IsZero", func() {
+		It("should be able to determine is zero ", func() {
+			Expect(types.ID(123).IsZero()).To(BeFalse())
+			Expect(types.ID(0).IsZero()).To(BeTrue())
 		})
 	})
 })

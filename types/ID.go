@@ -25,6 +25,10 @@ func (id ID) String() string {
 	return strconv.FormatUint(uint64(id), 10)
 }
 
+func (id ID) IsZero() bool {
+	return id == ID(0)
+}
+
 func ParseID(idString string) (ID, error) {
 	idUint64, err := strconv.ParseUint(idString, 10, 64)
 	if err != nil {
