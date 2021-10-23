@@ -3,12 +3,17 @@ package types
 import (
 	"database/sql/driver"
 	"errors"
+	"strings"
 	"time"
 )
 
 type Timestamp time.Time
 
 const format = "2006-01-02 15:04:05.000000000"
+const formatRFC3339Nano = time.RFC3339Nano // "2006-01-02T15:04:05.999999999Z07:00"
+
+var TimeZoneCST8 = time.FixedZone("CST-8", 8*60*60)
+var baseTimeZone = time.Local
 
 func CurrentTimestamp() Timestamp {
 	return Timestamp(time.Now().Round(time.Microsecond))
@@ -32,7 +37,7 @@ func (t Timestamp) IsZero() bool {
 // }
 
 func (t Timestamp) Value() (driver.Value, error) {
-	d := t.Time()
+	d := t.Time().In(baseTimeZone)
 
 	// zero time normalize
 	if d.Year() <= 1 && d.Month() <= 1 && d.Day() <= 1 {
@@ -49,31 +54,43 @@ func (c *Timestamp) Scan(v interface{}) error {
 		if !ok {
 			return errors.New("unsupported type")
 		}
-		len := len(timeString)
-		if len == 19 {
-			timeString = timeString + ".000000000"
-		} else if len == 21 {
-			timeString = timeString + "00000000"
-		} else if len == 22 {
-			timeString = timeString + "0000000"
-		} else if len == 23 {
-			timeString = timeString + "000000"
-		} else if len == 24 {
-			timeString = timeString + "00000"
-		} else if len == 25 {
-			timeString = timeString + "0000"
-		} else if len == 26 {
-			timeString = timeString + "000"
-		} else if len == 27 {
-			timeString = timeString + "00"
-		} else if len == 28 {
-			timeString = timeString + "0"
+
+		var f = format
+		if strings.Contains(timeString, "T") {
+			var err error
+			parsedTime, err = time.Parse(formatRFC3339Nano, timeString)
+			if err != nil {
+				return err
+			}
+		} else {
+			len := len(timeString)
+			if len == 19 {
+				timeString = timeString + ".000000000"
+			} else if len == 21 {
+				timeString = timeString + "00000000"
+			} else if len == 22 {
+				timeString = timeString + "0000000"
+			} else if len == 23 {
+				timeString = timeString + "000000"
+			} else if len == 24 {
+				timeString = timeString + "00000"
+			} else if len == 25 {
+				timeString = timeString + "0000"
+			} else if len == 26 {
+				timeString = timeString + "000"
+			} else if len == 27 {
+				timeString = timeString + "00"
+			} else if len == 28 {
+				timeString = timeString + "0"
+			}
+
+			var err error
+			parsedTime, err = time.ParseInLocation(f, timeString, baseTimeZone)
+			if err != nil {
+				return err
+			}
 		}
-		var err error
-		parsedTime, err = time.ParseInLocation(format, timeString, time.Local)
-		if err != nil {
-			return err
-		}
+
 		parsedTime = parsedTime.Round(time.Microsecond)
 	}
 
