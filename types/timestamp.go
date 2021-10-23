@@ -2,7 +2,6 @@ package types
 
 import (
 	"database/sql/driver"
-	"errors"
 	"strings"
 	"time"
 )
@@ -52,7 +51,7 @@ func (c *Timestamp) Scan(v interface{}) error {
 	if !ok {
 		timeString, ok := v.(string)
 		if !ok {
-			return errors.New("unsupported type")
+			return &ErrInvalidParameter{Parameter: v}
 		}
 
 		var f = format
@@ -60,7 +59,7 @@ func (c *Timestamp) Scan(v interface{}) error {
 			var err error
 			parsedTime, err = time.Parse(formatRFC3339Nano, timeString)
 			if err != nil {
-				return err
+				return &ErrInvalidParameter{Parameter: timeString, Cause: err}
 			}
 		} else {
 			len := len(timeString)
@@ -87,7 +86,7 @@ func (c *Timestamp) Scan(v interface{}) error {
 			var err error
 			parsedTime, err = time.ParseInLocation(f, timeString, baseTimeZone)
 			if err != nil {
-				return err
+				return &ErrInvalidParameter{Parameter: timeString, Cause: err}
 			}
 		}
 
