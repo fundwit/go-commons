@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -16,13 +17,17 @@ func TestTimestampValue(t *testing.T) {
 		Expect(err).To(BeNil())
 		Expect(v).To(Equal("0001-01-01 00:00:00.000000000"))
 
-		v, err = types.TimestampOfDate(2021, 5, 6, 12, 30, 40, 666666666, types.TimeZoneCST8).Value()
+		ts := types.TimestampOfDate(2021, 5, 6, 12, 30, 40, 666666666, types.TimeZoneCST8)
+		v, err = ts.Value()
 		Expect(err).To(BeNil())
-		Expect(v).To(Equal("2021-05-06 12:30:40.666667000")) // Local time
+		Expect(v).To(Equal("2021-05-06 12:30:40.666667000"))                                             // Local time
+		Expect(v).To(Equal("2021-05-06 " + strconv.Itoa(ts.Time().Local().Hour()) + ":30:40.666667000")) // Local time
 
-		v, err = types.TimestampOfDate(2021, 5, 6, 12, 30, 40, 666666666, time.UTC).Value()
+		ts = types.TimestampOfDate(2021, 5, 6, 12, 30, 40, 666666666, time.UTC)
+		v, err = ts.Value()
 		Expect(err).To(BeNil())
-		Expect(v).To(Equal("2021-05-06 20:30:40.666667000")) // Local time
+		Expect(v).To(Equal("2021-05-06 20:30:40.666667000"))                                             // Local time
+		Expect(v).To(Equal("2021-05-06 " + strconv.Itoa(ts.Time().Local().Hour()) + ":30:40.666667000")) // Local time
 	})
 
 	t.Run("should be able to scan value", func(t *testing.T) {
